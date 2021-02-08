@@ -38,39 +38,75 @@ public class MyList<T>
 
 	public void Add(T newElement)
 	{
-		if (Count == Capacity)
-		{
-			Capacity *= 2;
-			array = GetNewArray(array, Capacity);
-		}
+		SetMoreSpaciousArrayIfNeed();
 
 		array[Count] = newElement;
 		Count++;
 	}
 	
-	// public void Insert()
-	// {
-	// 	
-	// }
+	public void Insert(int index, T elementToInsert)
+	{
+		if (index < 0 || index >= array.Length)
+			IndexOutOfRangeException();
 
-	// public bool Remove(T elementToRemove)
-	// {
-	// 	
-	// 	foreach (var element in array)
-	// 	{
-	// 		if (element.Equals(elementToRemove))
-	// 		{
-	// 			
-	// 		}
-	// 	}
-	//
-	// 	return false;
-	// }
-	//
-	// public void RemoveAt()
-	// {
-	// 	
-	// }
+		SetMoreSpaciousArrayIfNeed();
+		
+		int i = 0;
+		T[] newArray = new T[array.Length];
+
+		for (int j = 0; j < array.Length; j++)
+		{
+			if (j == index)
+			{
+				newArray[i] = elementToInsert;
+				i++;
+			}
+
+			newArray[i] = array[j];
+			i++;
+		}
+
+		array = newArray;
+		Count++;
+	}
+
+	public bool Remove(T elementToRemove)
+	{
+		if (Contain(elementToRemove))
+			return TryRemoveElement(elementToRemove);
+
+		return false;
+	}
+	
+	public bool RemoveAt(int index)
+	{
+		if (index < 0 || index >= array.Length)
+			IndexOutOfRangeException();
+
+		var elementToRemove = array[index];
+
+		return TryRemoveElement(elementToRemove);
+	}
+
+	bool TryRemoveElement(T elementToRemove)
+	{
+		int i = 0;
+		bool removed  = false;
+		T[]  newArray = new T[array.Length];
+		
+		foreach (var element in array)
+		{
+			if (!removed && element.Equals(elementToRemove))
+			{
+				removed = true;
+				Count--;
+				continue;
+			}
+			newArray[i] = element;
+		}
+
+		return removed;
+	}
 
 	public int LastIndexOf(T elementToFind)
 	{
@@ -136,7 +172,7 @@ public class MyList<T>
 		if (Capacity != Count)
 		{
 			Capacity = Count;
-			array    = GetNewArray(array, Capacity);
+			array = GetNewArrayByLegacyArray(array, Capacity);
 		}
 	}
 
@@ -151,10 +187,19 @@ public class MyList<T>
 		return false;
 	}
 
-	T[] GetNewArray(T[] legacyArray, int newCapacity)
+	void SetMoreSpaciousArrayIfNeed()
+	{
+		if (Count == Capacity)
+		{
+			Capacity *= 2;
+			array = GetNewArrayByLegacyArray(array, Capacity);
+		}
+	}
+
+	T[] GetNewArrayByLegacyArray(T[] legacyArray, int newCapacity)
 	{
 		T[] newArray = new T[newCapacity];
-		var count= newCapacity < legacyArray.Length ? newCapacity : legacyArray.Length;
+		var count = newCapacity < legacyArray.Length ? newCapacity : legacyArray.Length;
 		
 		for (int i = 0; i < count; i++)
 			newArray[i] = legacyArray[i];
