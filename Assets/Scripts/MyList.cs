@@ -25,13 +25,13 @@ public class MyList<T>
 	{
 		get
 		{
-			if (i > Count)
+			if (i < 0 || i > Count)
 				IndexOutOfRangeException();
 			return array[i]; 
 		}
 		set
 		{
-			if (i > Count)
+			if (i < 0 || i > Count)
 				IndexOutOfRangeException();
 			array[i] = value; }
 	}
