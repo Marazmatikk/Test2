@@ -10,11 +10,7 @@ public class MyList<T>
 	int capacity;
 	
 	public int Count    { get; private set; }
-	public int Capacity
-	{
-		get => capacity;
-		private set => capacity = capacity == 0 ? 1 : value;
-	}
+	public int Capacity => array.Length;
 	
 	public MyList()
 	{
@@ -46,41 +42,35 @@ public class MyList<T>
 	
 	public void Insert(int index, T elementToInsert)
 	{
-		if (index < 0 || index >= array.Length)
+		if (index < 0 || index >= Count)
 			IndexOutOfRangeException();
 
 		SetMoreSpaciousArrayIfNeed();
 		
 		int i = 0;
-		T[] newArray = new T[array.Length];
-
-		for (int j = 0; j < array.Length; j++)
+		for (int j = 0; j < Count; j++)
 		{
 			if (j == index)
 			{
-				newArray[i] = elementToInsert;
+				array[i] = elementToInsert;
 				i++;
 			}
 
-			newArray[i] = array[j];
+			array[i] = array[j];
 			i++;
 		}
 
-		array = newArray;
 		Count++;
 	}
 
 	public bool Remove(T elementToRemove)
 	{
-		if (Contain(elementToRemove))
-			return TryRemoveElement(elementToRemove);
-
-		return false;
+		return TryRemoveElement(elementToRemove);
 	}
 	
 	public bool RemoveAt(int index)
 	{
-		if (index < 0 || index >= array.Length)
+		if (index < 0 || index >= Count)
 			IndexOutOfRangeException();
 
 		var elementToRemove = array[index];
@@ -91,31 +81,34 @@ public class MyList<T>
 	bool TryRemoveElement(T elementToRemove)
 	{
 		int i = 0;
-		bool removed  = false;
-		T[]  newArray = new T[array.Length];
-		
-		foreach (var element in array)
+		bool removed = false;
+
+		for (int j = 0; j < Count; j++)
 		{
-			if (!removed && element.Equals(elementToRemove))
+			if (!removed && array[j].Equals(elementToRemove))
 			{
 				removed = true;
-				Count--;
 				continue;
 			}
-			newArray[i] = element;
+
+			array[i] = array[j];
+			i++;
 		}
+
+		if (removed)
+			Count--;
 
 		return removed;
 	}
 
 	public int LastIndexOf(T elementToFind)
 	{
-		return LastIndexOf(elementToFind, array.Length-1, array.Length);
+		return LastIndexOf(elementToFind, Count-1, Count);
 	}
 	
 	public int LastIndexOf(T elementToFind, int indexStart)
 	{
-		var elementsAmount = array.Length - indexStart;
+		var elementsAmount = Count - indexStart;
 		return LastIndexOf(elementToFind, indexStart, elementsAmount);
 	}
 	
@@ -135,12 +128,12 @@ public class MyList<T>
 
 	public int IndexOf(T elementToFind)
 	{
-		return IndexOf(elementToFind, 0, array.Length);
+		return IndexOf(elementToFind, 0, Count);
 	}
 	
 	public int IndexOf(T elementToFind, int indexStart)
 	{
-		int elementsAmount = array.Length - indexStart;
+		int elementsAmount = Count - indexStart;
 		return IndexOf(elementToFind, indexStart, elementsAmount);
 	}
 	
@@ -149,7 +142,7 @@ public class MyList<T>
 		if(elementToFind == null)
 			throw new ArgumentNullException();
 		
-		if(indexStart < 0 || elementsAmount < 0 || indexStart > array.Length || elementsAmount > (array.Length - indexStart))
+		if(elementsAmount > (Count - indexStart))
 			throw new ArgumentOutOfRangeException();
 		
 		for (int i = indexStart; i < indexStart + elementsAmount; i++)
@@ -163,24 +156,23 @@ public class MyList<T>
 
 	public void Clear()
 	{
-		array = new T[0];
+		for (int i = 0; i < Count; i++)
+			array[i] = default;
+		
 		Count = 0;
 	}
 
 	public void TrimExcess()
 	{
-		if (Capacity != Count)
-		{
-			Capacity = Count;
-			array = GetNewArrayByLegacyArray(array, Capacity);
-		}
+		if (array.Length != Count)
+			array = GetNewArrayByLegacyArray(array, Count);
 	}
 
 	public bool Contain(T elementToFind)
 	{
-		foreach (var element in array)
+		for (int i = 0; i < Count; i++)
 		{
-			if (element.Equals(elementToFind))
+			if (array[i].Equals(elementToFind))
 				return true;
 		}
 
@@ -189,19 +181,18 @@ public class MyList<T>
 
 	void SetMoreSpaciousArrayIfNeed()
 	{
-		if (Count == Capacity)
+		if (Count == array.Length)
 		{
-			Capacity *= 2;
-			array = GetNewArrayByLegacyArray(array, Capacity);
+			var newLength = array.Length == 0 ? 1 : array.Length * 2;
+			array = GetNewArrayByLegacyArray(array, newLength);
 		}
 	}
 
-	T[] GetNewArrayByLegacyArray(T[] legacyArray, int newCapacity)
+	T[] GetNewArrayByLegacyArray(T[] legacyArray, int length)
 	{
-		T[] newArray = new T[newCapacity];
-		var count = newCapacity < legacyArray.Length ? newCapacity : legacyArray.Length;
+		T[] newArray = new T[length];
 		
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < Count; i++)
 			newArray[i] = legacyArray[i];
 
 		return newArray;
@@ -209,6 +200,6 @@ public class MyList<T>
 
 	IndexOutOfRangeException IndexOutOfRangeException()
 	{
-		return new IndexOutOfRangeException($"The collection hold only {array.Length} elements.");
+		return new IndexOutOfRangeException($"The collection hold only {Count} elements.");
 	}
 }
