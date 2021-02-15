@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MyList<T>
+public class MyList<T>: IList<T>
 {
 	T[] array;
 
@@ -30,6 +30,11 @@ public class MyList<T>
 			if (i < 0 || i > Count)
 				IndexOutOfRangeException();
 			array[i] = value; }
+	}
+	
+	public bool IsReadOnly
+	{
+		get { return false; }
 	}
 
 	public void Add(T newElement)
@@ -62,20 +67,47 @@ public class MyList<T>
 
 		Count++;
 	}
+	
+	public void CopyTo(T[] arrayToCopy, int index)
+	{
+		if (index < 0 || index >= Count)
+			IndexOutOfRangeException();
+		
+		int newCapacity = array.Length;
+		int elementsCount = Count + arrayToCopy.Length;
+		
+		while (newCapacity < elementsCount)
+			newCapacity *= 2;
+
+		if (newCapacity != array.Length)
+			array = GetNewArrayByLegacyArray(array, newCapacity);
+
+		for (int i = index; i < Count; i++)
+		{
+			array[i + arrayToCopy.Length] = array[i];
+		}
+
+		int j = 0;
+		for (int i = index; i < index + arrayToCopy.Length; i++)
+		{
+			array[i] = arrayToCopy[j];
+			j++;
+		}
+	}
 
 	public bool Remove(T elementToRemove)
 	{
 		return TryRemoveElement(elementToRemove);
 	}
 	
-	public bool RemoveAt(int index)
+	public void RemoveAt(int index)
 	{
 		if (index < 0 || index >= Count)
 			IndexOutOfRangeException();
 
 		var elementToRemove = array[index];
 
-		return TryRemoveElement(elementToRemove);
+		TryRemoveElement(elementToRemove);
 	}
 
 	bool TryRemoveElement(T elementToRemove)
@@ -90,8 +122,9 @@ public class MyList<T>
 				removed = true;
 				continue;
 			}
-
-			array[i] = array[j];
+			if(removed)
+				array[i] = array[j];
+			
 			i++;
 		}
 
@@ -168,7 +201,7 @@ public class MyList<T>
 			array = GetNewArrayByLegacyArray(array, Count);
 	}
 
-	public bool Contain(T elementToFind)
+	public bool Contains(T elementToFind)
 	{
 		for (int i = 0; i < Count; i++)
 		{
@@ -201,5 +234,67 @@ public class MyList<T>
 	IndexOutOfRangeException IndexOutOfRangeException()
 	{
 		return new IndexOutOfRangeException($"The collection hold only {Count} elements.");
+	}
+
+	public IEnumerator<T> GetEnumerator()
+	{
+		return new MyListEnum<T>(array);
+	}
+
+	IEnumerator IEnumerable.GetEnumerator()
+	{
+		return GetEnumerator();
+	}
+}
+
+public class MyListEnum<T> : IEnumerator<T>
+{
+	public T[] array;
+
+	// Enumerators are positioned before the first element
+	// until the first MoveNext() call.
+	int position = -1;
+
+	public MyListEnum(T[] list)
+	{
+		array = list;
+	}
+
+	public bool MoveNext()
+	{
+		position++;
+		return (position < array.Length);
+	}
+
+	public void Reset()
+	{
+		position = -1;
+	}
+
+	object IEnumerator.Current
+	{
+		get
+		{
+			return Current;
+		}
+	}
+
+	public T Current
+	{
+		get
+		{
+			try
+			{
+				return array[position];
+			}
+			catch (IndexOutOfRangeException)
+			{
+				throw new InvalidOperationException();
+			}
+		}
+	}
+
+	public void Dispose()
+	{
 	}
 }
