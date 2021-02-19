@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MyList<T>: IList<T>
+public class MyList<T>: IList<T>, IReadOnlyList<T>
 {
 	T[] array;
 
@@ -31,7 +31,7 @@ public class MyList<T>: IList<T>
 				IndexOutOfRangeException();
 			array[i] = value; }
 	}
-	
+
 	public bool IsReadOnly
 	{
 		get { return false; }
@@ -238,63 +238,14 @@ public class MyList<T>: IList<T>
 
 	public IEnumerator<T> GetEnumerator()
 	{
-		return new MyListEnum<T>(array);
+		for (int i = 0; i < Count; i++)
+		{
+			yield return array[i];
+		}
 	}
 
 	IEnumerator IEnumerable.GetEnumerator()
 	{
 		return GetEnumerator();
-	}
-}
-
-public class MyListEnum<T> : IEnumerator<T>
-{
-	public T[] array;
-
-	// Enumerators are positioned before the first element
-	// until the first MoveNext() call.
-	int position = -1;
-
-	public MyListEnum(T[] list)
-	{
-		array = list;
-	}
-
-	public bool MoveNext()
-	{
-		position++;
-		return (position < array.Length);
-	}
-
-	public void Reset()
-	{
-		position = -1;
-	}
-
-	object IEnumerator.Current
-	{
-		get
-		{
-			return Current;
-		}
-	}
-
-	public T Current
-	{
-		get
-		{
-			try
-			{
-				return array[position];
-			}
-			catch (IndexOutOfRangeException)
-			{
-				throw new InvalidOperationException();
-			}
-		}
-	}
-
-	public void Dispose()
-	{
 	}
 }
