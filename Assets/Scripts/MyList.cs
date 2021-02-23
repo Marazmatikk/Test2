@@ -12,9 +12,10 @@ public class MyList<T>: IList<T>, IReadOnlyList<T>
 	public int Count    { get; private set; }
 	public int Capacity => array.Length;
 	
-	public MyList()
+	public MyList(T[] arr = null)
 	{
-		array = new T[0];
+		array = arr ?? new T[]{};
+		Count = array.Length;
 	}
 
 	public T this[int i]
@@ -47,27 +48,25 @@ public class MyList<T>: IList<T>, IReadOnlyList<T>
 	
 	public void Insert(int index, T elementToInsert)
 	{
-		if (index < 0 || index >= Count)
+		if (index < 0 || index > Count)
 			IndexOutOfRangeException();
 
 		SetMoreSpaciousArrayIfNeed();
+		T temp1 = array[index];
+		array[index] = elementToInsert;
+		var temp2= array[index+1];
+		array[index+1] = temp1;
 		
-		int i = 0;
-		for (int j = 0; j < Count; j++)
+		for (int j = index+2; j < Count + 1; j++)
 		{
-			if (j == index)
-			{
-				array[i] = elementToInsert;
-				i++;
-			}
-
-			array[i] = array[j];
-			i++;
+			array[j] = temp2;
+			if (j + 1 < array.Length)
+				temp2 = array[j + 1];
 		}
 
 		Count++;
 	}
-	
+
 	public void CopyTo(T[] arrayToCopy, int index)
 	{
 		if (index < 0 || index >= Count)
@@ -93,45 +92,40 @@ public class MyList<T>: IList<T>, IReadOnlyList<T>
 			array[i] = arrayToCopy[j];
 			j++;
 		}
+
+		Count += arrayToCopy.Length;
 	}
 
 	public bool Remove(T elementToRemove)
 	{
-		return TryRemoveElement(elementToRemove);
+		int i = 0;
+		bool isContained = false;
+		for (i = 0; i < Count; i++)
+		{
+			if (array[i].Equals(elementToRemove))
+			{
+				isContained = true;
+				break;
+			}
+		}
+
+		if (isContained)
+		{
+			RemoveAt(i);
+			return true;
+		}
+
+		return false;
 	}
 	
 	public void RemoveAt(int index)
 	{
-		if (index < 0 || index >= Count)
-			IndexOutOfRangeException();
+		for (int j = index; j < Count-1; j++)
+			array[j] = array[j + 1];
 
-		var elementToRemove = array[index];
-
-		TryRemoveElement(elementToRemove);
-	}
-
-	bool TryRemoveElement(T elementToRemove)
-	{
-		int i = 0;
-		bool removed = false;
-
-		for (int j = 0; j < Count; j++)
-		{
-			if (!removed && array[j].Equals(elementToRemove))
-			{
-				removed = true;
-				continue;
-			}
-			if(removed)
-				array[i] = array[j];
-			
-			i++;
-		}
-
-		if (removed)
-			Count--;
-
-		return removed;
+		array[Count - 1] = default;
+		
+		Count--;
 	}
 
 	public int LastIndexOf(T elementToFind)
@@ -216,7 +210,7 @@ public class MyList<T>: IList<T>, IReadOnlyList<T>
 	{
 		if (Count == array.Length)
 		{
-			var newLength = array.Length == 0 ? 1 : array.Length * 2;
+			var newLength = array.Length == 0 ? 2 : array.Length * 2;
 			array = GetNewArrayByLegacyArray(array, newLength);
 		}
 	}
